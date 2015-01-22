@@ -11,12 +11,7 @@ import scoverage.ScoverageSbtPlugin
 object Build extends sbt.Build {
 
   lazy val root = (Project(id = "coinffeine", base = file("."))
-    aggregate(headless, peer, protocol, model, overlay, common, commonAkka, commonTest, gui, server, okpaymock)
-  )
-
-  lazy val server = (Project(id = "server", base = file("coinffeine-server"))
-    settings(Assembly.settings("coinffeine.server.main.Main"): _*)
-    dependsOn(peer % "compile->compile;test->test", commonTest % "test->compile")
+    aggregate(headless, peer, protocol, model, overlay, common, commonAkka, commonTest, gui)
   )
 
   lazy val peer = (Project(id = "peer", base = file("coinffeine-peer"))
@@ -76,31 +71,6 @@ object Build extends sbt.Build {
     configs IntegrationTest
     settings(Defaults.itSettings: _*)
     dependsOn(peer % "compile->compile;test,it->test", commonTest)
-  )
-
-  lazy val test = (Project(id = "test", base = file("coinffeine-test"))
-    dependsOn(peer % "compile->compile;test->test", server, okpaymock,
-      commonAkka % "compile->compile;test->test", commonTest % "compile->compile;test->compile")
-  )
-
-  lazy val okpaymock = (Project(id = "okpaymock", base = file("coinffeine-okpaymock"))
-    settings(CxfWsdl2JavaPlugin.cxf.settings: _*)
-    settings(Assembly.settings("coinffeine.okpaymock.main.Main"): _*)
-    settings(
-      sourceGenerators in Compile <+= wsdl2java in Compile,
-      wsdls := Seq(
-        Wsdl((resourceDirectory in Compile).value / "okpay.wsdl",
-          Seq("-p", "coinffeine.okpaymock.generated", "-server", "-impl"),
-          "generated-sources-okpaymock"
-        )
-      )
-    )
-    dependsOn(
-      model,
-      peer,
-      commonAkka % "compile->compile;test->test",
-      commonTest % "compile->compile;test->compile"
-    )
   )
 
   lazy val benchmark = (Project(id = "benchmark", base = file("coinffeine-benchmark"))
